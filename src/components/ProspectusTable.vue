@@ -22,7 +22,7 @@
         <div v-for="(subjects, semester) in semesters" :key="semester" class="mb-4">
           <h3 class="font-semibold mb-1">{{ semester }} Semester</h3>
           <table class="w-full border-collapse border border-gray-400 text-sm">
-            <thead class="bg-blue-600 text-white">
+            <thead class="bg-green-600 text-white">
               <tr>
                 <th class="border p-1">Grade</th>
                 <th class="border p-1">Descriptive Title</th>
@@ -127,7 +127,7 @@ const printTable = () => {
           p{font-size:12px;}
           table { width:100%; border-collapse: collapse; margin-top:20px; }
           th,td{border:1px solid black; padding:4px; text-align:center; font-size:12px; }
-          th{background-color:#4f81bd;color:white;}
+          th{background-color:green;color:white;}
           tbody tr:nth-child(even){background-color:#f0f0f0;}
           tfoot tr{background-color:#d9e1f2;font-weight:bold;}
         </style>

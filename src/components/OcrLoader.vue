@@ -71,7 +71,7 @@ defineProps({
     opacity: 1;
     transform: translateY(0);
   }
-}
+}FileUpload 
 .animate-fade-in-up {
   animation: fade-in-up 0.4s ease-out;
 }

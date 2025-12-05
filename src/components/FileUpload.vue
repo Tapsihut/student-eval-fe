@@ -19,9 +19,17 @@
           </div>
         </div>
 
-        <p class="text-gray-600">
-          <span class="font-medium text-green-600">Drag and drop</span> your file here or click to browse.
-        </p>
+<div class="text-center space-y-1">
+    <p class="text-lg font-semibold text-gray-800">
+        Upload Your Transcript
+    </p>
+
+    <p class="text-gray-600 text-sm">
+        <span class="font-medium text-green-600">Drag & drop</span> your file here  
+        <span class="text-gray-500">or</span>  
+        <span class="underline font-medium cursor-pointer text-blue-600"> click to browse</span>.
+    </p>
+</div>
 
         <p v-if="fileName" class="text-gray-700 font-medium">📎 {{ fileName }}</p>
         <p v-else class="text-gray-400 text-sm">No file chosen</p>

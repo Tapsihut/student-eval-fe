@@ -1,15 +1,18 @@
 <template>
     <div>
         <h2 class="text-2xl font-semibold text-gray-800 mb-4">
-            Upload Transcript of Records
+            Select Curriculum Records
         </h2>
 
         <!-- Curriculum Selector -->
-        <div class="relative mb-4 w-full sm:w-1/3">
-            <div class="border border-gray-300 rounded-lg px-3 py-2 bg-white cursor-pointer"
-                @click="toggleCurriculumDropdown">
-                {{ selectedCurriculum?.course?.name ?? 'Select Curriculum' }}
-            </div>
+<div class="relative mb-4 w-full">
+    <div
+        class="border border-gray-300 rounded-lg px-3 py-2 bg-white cursor-pointer"
+        @click="toggleCurriculumDropdown"
+    >
+        {{ selectedCurriculum?.course?.name ?? 'Select Curriculum' }}
+    </div>
+
 
             <!-- Dropdown -->
             <div v-if="showCurriculumDropdown"
