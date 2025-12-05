@@ -1,0 +1,17 @@
+clone
+git clone https://github.com/Tapsihut/subject-evaluation-be.git
+git clone https://github.com/Tapsihut/subject-evaluation-fe.git
+
+FE
+npm install
+git checkout develop
+git pull origin develop
+
+BE 
+composer install
+npm install
+php artisan migrate:fresh --seed
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+git pull origin develop
+

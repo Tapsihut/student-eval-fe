@@ -1,0 +1,162 @@
+<template>
+  <div class="w-full max-w-4xl mx-auto py-2">
+    <label for="file-upload"
+      class="block border-2 border-dashed rounded-lg p-6 text-center cursor-pointer bg-white transition-all duration-200"
+      :class="isDragging ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-green-400'"
+      @drop="onDrop"
+      @dragover="onDragOver"
+      @dragleave="onDragLeave"
+    >
+      <input id="file-upload" type="file" class="hidden" @change="onFileChange" accept=".jpg,.jpeg,.png,.pdf" />
+
+      <!-- Content -->
+      <div class="space-y-3">
+        <!-- Preview -->
+        <div v-if="previewUrl" class="flex flex-col items-center">
+          <div v-if="isImage" class="w-32 h-32 mb-3 overflow-hidden rounded-md border border-gray-200">
+            <img :src="previewUrl" alt="Preview" class="w-full h-full object-cover" />
+          </div>
+          <div v-else class="flex items-center justify-center w-32 h-32 mb-3 bg-gray-100 rounded-md border border-gray-200">
+            <span class="text-gray-500 text-sm">📄 PDF File</span>
+          </div>
+        </div>
+
+        <p class="text-gray-600">
+          <span class="font-medium text-green-600">Drag and drop</span> your file here or click to browse.
+        </p>
+
+        <p v-if="fileName" class="text-gray-700 font-medium">📎 {{ fileName }}</p>
+        <p v-else class="text-gray-400 text-sm">No file chosen</p>
+
+        <!-- Action Buttons -->
+        <div v-if="file && !isSuccess" class="flex justify-center gap-2 mt-4">
+          <button @click.prevent="emitFile"
+            class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
+            Continue
+          </button>
+
+          <button type="button" @click="cancelUpload"
+            class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </label>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, watch } from "vue"
+import * as pdfjsLib from "pdfjs-dist"
+
+// ✅ Setup PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url
+).toString()
+
+const props = defineProps({
+  clearSignal: { type: Boolean, default: false }, // 🔹 trigger from parent
+  isProcessing: { type: Boolean, default: false }, // 🔹 disable during processing
+  isSuccess: { type: Boolean, default: false } // 🔹 clear on success
+})
+
+const emits = defineEmits(["file-selected"])
+
+const file = ref(null)
+const fileName = ref("")
+const previewUrl = ref("")
+const isDragging = ref(false)
+const convertedImageFile = ref(null) // <-- new: store converted image
+
+const isImage = computed(() => /\.(jpg|jpeg|png)$/i.test(fileName.value))
+
+// Handle file input change
+function onFileChange(e) {
+  const selectedFile = e.target.files[0]
+  handleFile(selectedFile)
+}
+
+// Handle drag-drop
+function onDrop(e) {
+  e.preventDefault()
+  isDragging.value = false
+  const droppedFile = e.dataTransfer.files[0]
+  handleFile(droppedFile)
+}
+
+function onDragOver(e) {
+  e.preventDefault()
+  isDragging.value = true
+}
+
+function onDragLeave() {
+  isDragging.value = false
+}
+
+// ✅ Main handler (image or PDF)
+async function handleFile(selectedFile) {
+  if (!selectedFile) return
+  file.value = selectedFile
+  fileName.value = selectedFile.name
+
+  if (selectedFile.type === "application/pdf") {
+    // PDF file: convert to image
+    await convertPdfToImage(selectedFile)
+  } else if (selectedFile.type.startsWith("image/")) {
+    // Regular image file
+    previewUrl.value = URL.createObjectURL(selectedFile)
+    convertedImageFile.value = selectedFile
+  } else {
+    previewUrl.value = ""
+    convertedImageFile.value = null
+  }
+}
+
+// ✅ Convert PDF → Image (first page)
+async function convertPdfToImage(pdfFile) {
+  const arrayBuffer = await pdfFile.arrayBuffer()
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+  const page = await pdf.getPage(1)
+  const viewport = page.getViewport({ scale: 2.0 })
+
+  const canvas = document.createElement("canvas")
+  const context = canvas.getContext("2d")
+  canvas.width = viewport.width
+  canvas.height = viewport.height
+
+  await page.render({ canvasContext: context, viewport }).promise
+
+  // Convert to blob
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"))
+  const imageFile = new File([blob], pdfFile.name.replace(".pdf", ".png"), { type: "image/png" })
+  convertedImageFile.value = imageFile
+  previewUrl.value = URL.createObjectURL(blob)
+}
+
+// ✅ Emit converted image (for API)
+function emitFile() {
+  const fileToSend = convertedImageFile.value || file.value
+  emits("file-selected", fileToSend)
+}
+
+// ✅ Cancel / Clear file
+function cancelUpload() {
+  file.value = null
+  fileName.value = ""
+  previewUrl.value = ""
+  convertedImageFile.value = null
+}
+
+// ✅ Watch for clear signal from parent
+function clearFile() {
+  cancelUpload()
+}
+
+watch(
+  () => props.clearSignal,
+  (newVal) => {
+    if (newVal) clearFile()
+  }
+)
+</script>
